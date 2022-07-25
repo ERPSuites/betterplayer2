@@ -21,6 +21,7 @@ enum BetterPlayerEventType {
   pipStart,
   pipStop,
   setupDataSource,
+  closed,
   bufferingStart,
   bufferingUpdate,
   bufferingEnd,

@@ -31,6 +31,8 @@ dev_dependencies:
     sdk: flutter
 
 flutter:
+  assets:
+    - assets/es_subtitles.png
   plugin:
     platforms:
       android:

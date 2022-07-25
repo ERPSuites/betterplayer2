@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:better_player/src/configuration/better_player_controls_configuration.dart';
+import 'package:better_player/src/subtitles/better_player_subtitles_source.dart';
+import 'package:better_player/src/subtitles/better_player_subtitles_source_type.dart';
 import 'package:better_player/src/controls/better_player_controls_state.dart';
 import 'package:better_player/src/controls/better_player_cupertino_progress_bar.dart';
 import 'package:better_player/src/controls/better_player_multiple_gesture_detector.dart';
@@ -9,6 +11,7 @@ import 'package:better_player/src/core/better_player_utils.dart';
 import 'package:better_player/src/video_player/video_player.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 
 class BetterPlayerCupertinoControls extends StatefulWidget {
   ///Callback used to send information if player bar is hidden or not
@@ -38,6 +41,8 @@ class _BetterPlayerCupertinoControlsState
   Timer? _expandCollapseTimer;
   Timer? _initTimer;
   bool _wasLoading = false;
+  bool _isShowingSubtitles = true;
+
 
   VideoPlayerController? _controller;
   BetterPlayerController? _betterPlayerController;
@@ -129,6 +134,19 @@ class _BetterPlayerCupertinoControlsState
               isFullScreen ? SafeArea(child: controlsColumn) : controlsColumn),
     );
   }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   if (betterPlayerController!.betterPlayerSubtitlesSourceList.length == 1) {
+  //     _isShowingSubtitles = betterPlayerController!.betterPlayerSubtitlesSourceList.first.selectedByDefault ?? false;
+  //     // if (betterPlayerController!.betterPlayerSubtitlesSourceList.first.selectedByDefault != null) {
+  //     //   if (betterPlayerController!.betterPlayerSubtitlesSourceList.first.selectedByDefault!) {
+  //     //     _isShowingSubtitles = true;
+  //     //   }
+  //     // }
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -238,7 +256,7 @@ class _BetterPlayerCupertinoControlsState
     );
   }
 
-  GestureDetector _buildExpandButton(
+  GestureDetector _buildCloseButton(
     Color backgroundColor,
     Color iconColor,
     double barHeight,
@@ -246,7 +264,7 @@ class _BetterPlayerCupertinoControlsState
     double buttonPadding,
   ) {
     return GestureDetector(
-      onTap: _onExpandCollapse,
+      onTap: _onVideoClosed,
       child: AnimatedOpacity(
         opacity: controlsNotVisible ? 0.0 : 1.0,
         duration: _controlsConfiguration.controlsHideTime,
@@ -260,9 +278,7 @@ class _BetterPlayerCupertinoControlsState
             decoration: BoxDecoration(color: backgroundColor),
             child: Center(
               child: Icon(
-                _betterPlayerController!.isFullScreen
-                    ? _controlsConfiguration.fullscreenDisableIcon
-                    : _controlsConfiguration.fullscreenEnableIcon,
+                _controlsConfiguration.closeVideoIcon,
                 color: iconColor,
                 size: iconSize,
               ),
@@ -381,6 +397,71 @@ class _BetterPlayerCupertinoControlsState
     );
   }
 
+  GestureDetector _buildSubtitlesButton(
+    VideoPlayerController controller,
+    Color backgroundColor,
+    Color iconColor,
+    double barHeight,
+    double buttonPadding,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        cancelAndRestartTimer();
+
+        if (_isShowingSubtitles) {
+          // controller.setVolume(_latestVolume ?? 0.5);
+          BetterPlayerSubtitlesSource noneSource =  BetterPlayerSubtitlesSource(type: BetterPlayerSubtitlesSourceType.none);
+          betterPlayerController!.setupSubtitleSource(noneSource);
+          setState(() {
+            _isShowingSubtitles = false;
+          });
+        } 
+        else {
+          final subtitles =
+          List.of(betterPlayerController!.betterPlayerSubtitlesSourceList);
+          if (subtitles.length > 0) {
+            betterPlayerController!.setupSubtitleSource(subtitles.first, sourceInitialize: true);
+            setState(() {
+              _isShowingSubtitles = true;
+            });
+          }
+        }
+      },
+      child: AnimatedOpacity(
+        opacity: controlsNotVisible ? 0.0 : 1.0,
+        duration: _controlsConfiguration.controlsHideTime,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10.0),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 10.0),
+            child: Container(
+              color: backgroundColor,
+              child: Container(
+                height: barHeight,
+                padding: EdgeInsets.symmetric(
+                  horizontal: buttonPadding,
+                ),
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Image.asset('assets/images/es_subtitles.png',
+                    color: _isShowingSubtitles ? iconColor : Colors.white.withAlpha(150),
+                    fit: BoxFit.contain,
+                  ),
+                )
+                // Icon(
+                //   _isShowingSubtitles ? _controlsConfiguration.subtitlesIcon 
+                //   : _controlsConfiguration.subtitlesOffIcon,
+                //   color: iconColor,
+                // ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   GestureDetector _buildPlayPause(
     VideoPlayerController controller,
     Color iconColor,
@@ -491,7 +572,7 @@ class _BetterPlayerCupertinoControlsState
       child: Row(
         children: <Widget>[
           if (_controlsConfiguration.enableFullscreen)
-            _buildExpandButton(
+            _buildCloseButton(
               backgroundColor,
               iconColor,
               barHeight,
@@ -514,6 +595,10 @@ class _BetterPlayerCupertinoControlsState
           else
             const SizedBox(),
           const Spacer(),
+          if (_controlsConfiguration.enableSubtitles)
+            _buildSubtitlesButton(_controller!, backgroundColor, iconColor, barHeight, buttonPadding)
+          else
+            const SizedBox(),
           if (_controlsConfiguration.enableMute)
             _buildMuteButton(
               _controller,
@@ -609,6 +694,10 @@ class _BetterPlayerCupertinoControlsState
         cancelAndRestartTimer();
       }
     });
+  }
+
+  void _onVideoClosed() {
+    _betterPlayerController!.closeVideo(); 
   }
 
   void _onExpandCollapse() {

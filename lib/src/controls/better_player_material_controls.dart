@@ -1,4 +1,6 @@
 import 'dart:async';
+
+// import 'package:better_player/better_player.dart';
 import 'package:better_player/src/configuration/better_player_controls_configuration.dart';
 import 'package:better_player/src/controls/better_player_clickable_widget.dart';
 import 'package:better_player/src/controls/better_player_controls_state.dart';
@@ -7,6 +9,8 @@ import 'package:better_player/src/controls/better_player_multiple_gesture_detect
 import 'package:better_player/src/controls/better_player_progress_colors.dart';
 import 'package:better_player/src/core/better_player_controller.dart';
 import 'package:better_player/src/core/better_player_utils.dart';
+import 'package:better_player/src/subtitles/better_player_subtitles_source.dart';
+import 'package:better_player/src/subtitles/better_player_subtitles_source_type.dart';
 import 'package:better_player/src/video_player/video_player.dart';
 
 // Flutter imports:
@@ -43,6 +47,7 @@ class _BetterPlayerMaterialControlsState
   VideoPlayerController? _controller;
   BetterPlayerController? _betterPlayerController;
   StreamSubscription? _controlsVisibilityStreamSubscription;
+  bool _isShowingSubtitles = true;
 
   BetterPlayerControlsConfiguration get _controlsConfiguration =>
       widget.controlsConfiguration;
@@ -113,6 +118,19 @@ class _BetterPlayerMaterialControlsState
       ),
     );
   }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   if (betterPlayerController!.betterPlayerSubtitlesSourceList.length == 1) {
+  //     _isShowingSubtitles = betterPlayerController!.betterPlayerSubtitlesSourceList.first.selectedByDefault ?? false;
+  //     // if (betterPlayerController!.betterPlayerSubtitlesSourceList.first.selectedByDefault != null) {
+  //     //   if (betterPlayerController!.betterPlayerSubtitlesSourceList.first.selectedByDefault!) {
+  //     //     _isShowingSubtitles = true;
+  //     //   }
+  //     // }
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -301,6 +319,10 @@ class _BetterPlayerMaterialControlsState
                         ? Expanded(child: _buildPosition())
                         : const SizedBox(),
                   const Spacer(),
+                  if (_controlsConfiguration.enableSubtitles)
+                    _buildSubtitlesButton(_controller!)
+                  else
+                    const SizedBox(),
                   if (_controlsConfiguration.enableMute)
                     _buildMuteButton(_controller)
                   else
@@ -512,6 +534,51 @@ class _BetterPlayerMaterialControlsState
           return const SizedBox();
         }
       },
+    );
+  }
+
+    Widget _buildSubtitlesButton(
+    VideoPlayerController controller,
+  ) {
+    return BetterPlayerMaterialClickableWidget(
+      onTap: () {
+        cancelAndRestartTimer();
+
+        if (_isShowingSubtitles) {
+          // controller.setVolume(_latestVolume ?? 0.5);
+          BetterPlayerSubtitlesSource noneSource =  BetterPlayerSubtitlesSource(type: BetterPlayerSubtitlesSourceType.none);
+          betterPlayerController!.setupSubtitleSource(noneSource);
+          setState(() {
+            _isShowingSubtitles = false;
+          });
+        } 
+        else {
+          final subtitles =
+          List.of(betterPlayerController!.betterPlayerSubtitlesSourceList);
+          if (subtitles.length > 0) {
+            betterPlayerController!.setupSubtitleSource(subtitles.first, sourceInitialize: true);
+            setState(() {
+              _isShowingSubtitles = true;
+            });
+          }
+        }
+      },
+      child: AnimatedOpacity(
+        opacity: controlsNotVisible ? 0.0 : 1.0,
+        duration: _controlsConfiguration.controlsHideTime,
+        child: ClipRect(
+          child: Container(
+            height: _controlsConfiguration.controlBarHeight,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Icon(
+              (_isShowingSubtitles)
+                  ? _controlsConfiguration.subtitlesIcon
+                  : _controlsConfiguration.subtitlesOffIcon,
+              color: _controlsConfiguration.iconsColor,
+            ),
+          ),
+        ),
+      ),
     );
   }
 

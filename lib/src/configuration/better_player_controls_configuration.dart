@@ -33,6 +33,9 @@ class BetterPlayerControlsConfiguration {
   ///Icon of fullscreen mode disable
   final IconData fullscreenDisableIcon;
 
+  //Icon of close video
+  final IconData closeVideoIcon;
+
   ///Cupertino only icon, icon of skip
   final IconData skipBackIcon;
 
@@ -131,6 +134,9 @@ class BetterPlayerControlsConfiguration {
   ///Icon of the subtitles menu item from overflow menu
   final IconData subtitlesIcon;
 
+  ///Icon of the subtitles off icon
+  final IconData subtitlesOffIcon;
+
   ///Icon of the qualities menu item from overflow menu
   final IconData qualitiesIcon;
 
@@ -171,6 +177,7 @@ class BetterPlayerControlsConfiguration {
     this.unMuteIcon = Icons.volume_off_outlined,
     this.fullscreenEnableIcon = Icons.fullscreen_outlined,
     this.fullscreenDisableIcon = Icons.fullscreen_exit_outlined,
+    this.closeVideoIcon = Icons.close,
     this.skipBackIcon = Icons.replay_10_outlined,
     this.skipForwardIcon = Icons.forward_10_outlined,
     this.enableFullscreen = true,
@@ -203,7 +210,9 @@ class BetterPlayerControlsConfiguration {
     this.pipMenuIcon = Icons.picture_in_picture_outlined,
     this.playbackSpeedIcon = Icons.shutter_speed_outlined,
     this.qualitiesIcon = Icons.hd_outlined,
-    this.subtitlesIcon = Icons.closed_caption_outlined,
+    // this.subtitlesIcon = Icons.closed_caption_outlined,
+    this.subtitlesIcon = Icons.subtitles,
+    this.subtitlesOffIcon = Icons.subtitles_off,
     this.audioTracksIcon = Icons.audiotrack_outlined,
     this.overflowMenuIconsColor = Colors.black,
     this.forwardSkipTimeInMilliseconds = 10000,
